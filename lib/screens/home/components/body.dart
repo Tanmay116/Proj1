@@ -3,11 +3,16 @@ import 'package:proj1/screens/home/components/categories.dart';
 import 'package:proj1/screens/home/components/img_picker.dart';
 import 'package:proj1/screens/home/components/recommended_products.dart';
 import 'package:proj1/screens/home/components/title_text.dart';
+import 'package:proj1/services/auth.dart';
 import 'package:proj1/services/fetchCategories.dart';
 import 'package:proj1/services/fetchProducts.dart';
 
 class Body extends StatelessWidget {
   const Body({super.key});
+
+  Future<void> signOut() async {
+    await Auth().signOut();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +23,8 @@ class Body extends StatelessWidget {
         checkOrientation(orientation) ? height * 0.024 : width * 0.024;
     // enabling scrolling
     return Scaffold(
+      floatingActionButton: ElevatedButton(
+          onPressed: () => signOut(), child: const Text('Log Out')),
       body: SafeArea(
         child: SingleChildScrollView(
             child: Column(
