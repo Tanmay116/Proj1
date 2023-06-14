@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:proj1/screens/home/components/camera.dart';
 import 'package:proj1/screens/home/components/categories.dart';
 import 'package:proj1/screens/home/components/img_picker.dart';
 import 'package:proj1/screens/home/components/recommended_products.dart';
@@ -39,7 +40,7 @@ class Body extends StatelessWidget {
                     child: GestureDetector(
                       onTap: () {
                         Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => PCamera(),
+                          builder: (context) => CameraPage(),
                         ));
                       },
                       child: Container(

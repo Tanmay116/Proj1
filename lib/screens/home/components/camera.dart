@@ -2,6 +2,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:proj1/main.dart';
 import 'package:proj1/screens/home/components/img_preview.dart';
+import 'package:tflite/tflite.dart';
 
 class CameraPage extends StatefulWidget {
   const CameraPage({super.key});
@@ -19,10 +20,11 @@ class _CameraPageState extends State<CameraPage> {
   void initState() {
     super.initState();
     loadCamera();
+    loadModel();
   }
 
   loadCamera() {
-    cameraController = CameraController(cameras![0], ResolutionPreset.medium);
+    cameraController = CameraController(cameras![1], ResolutionPreset.medium);
     cameraController!.initialize().then((value) {
       if (!mounted) {
         return;
@@ -30,6 +32,7 @@ class _CameraPageState extends State<CameraPage> {
         setState(() {
           cameraController!.startImageStream((ImageStream) {
             cameraImage = ImageStream;
+            runModel();
           });
         });
       }
@@ -45,6 +48,35 @@ class _CameraPageState extends State<CameraPage> {
         }
       }
     });
+  }
+
+  runModel() async {
+    if (cameraImage != null) {
+      var predictions = await Tflite.runModelOnFrame(
+          bytesList: cameraImage!.planes.map((plane) {
+            return plane.bytes;
+          }).toList(),
+          imageHeight: cameraImage!.height,
+          imageWidth: cameraImage!.width,
+          imageMean: 127.5,
+          imageStd: 127.5,
+          rotation: 90,
+          numResults: 2,
+          threshold: 0.1,
+          asynch: true,
+          );
+          predictions!.forEach((element) {
+            setState(() {
+              output = element['label'];
+            });
+          });
+
+    }
+  }
+
+  loadModel() async {
+    await Tflite.loadModel(model: 'assets/model.tflite',
+    labels: 'assets/labels.txt');
   }
 
   @override
@@ -67,34 +99,36 @@ class _CameraPageState extends State<CameraPage> {
                     ),
             ),
           ),
-          Center(
-            child: ElevatedButton(
-                onPressed: () async {
-                  // if (cameraController!.value.isInitialized) {
-                  //   print('is initialized');
-                  //   return null;
-                  // }
-                  // if (cameraController!.value.isTakingPicture) {
-                  //   print('is taking pic');
-                  //   return null;
-                  // }
-                  try {
-                    cameraController!.setFlashMode(FlashMode.off);
-                    XFile picture = await cameraController!.takePicture();
-                    // print('took pic');
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ImgPreview(file: picture),
-                        ));
-                    // print(picture.runtimeType);
-                  } catch (e) {
-                    debugPrint("error occured while taking pcture: $e");
-                    return;
-                  }
-                },
-                child: const Text('Take a picture')),
-          ) 
+          Text(output,style: TextStyle(fontWeight: FontWeight.bold,
+          fontSize: 20),),
+          // Center(
+          //   child: ElevatedButton(
+          //       onPressed: () async {
+          //         // if (cameraController!.value.isInitialized) {
+          //         //   print('is initialized');
+          //         //   return null;
+          //         // }
+          //         // if (cameraController!.value.isTakingPicture) {
+          //         //   print('is taking pic');
+          //         //   return null;
+          //         // }
+          //         try {
+          //           cameraController!.setFlashMode(FlashMode.off);
+          //           XFile picture = await cameraController!.takePicture();
+          //           // print('took pic');
+          //           Navigator.push(
+          //               context,
+          //               MaterialPageRoute(
+          //                 builder: (context) => ImgPreview(file: picture),
+          //               ));
+          //           // print(picture.runtimeType);
+          //         } catch (e) {
+          //           debugPrint("error occured while taking pcture: $e");
+          //           return;
+          //         }
+          //       },
+          //       child: const Text('Take a picture')),
+          // )
         ],
       ),
     );
